@@ -1,0 +1,17 @@
+# Consumed by the ALB module to attach this security group
+output "alb_sg_id" {
+  description = "Security group ID for the ALB"
+  value       = aws_security_group.alb.id
+}
+
+# Consumed by ECS task definitions to control inbound traffic
+output "ecs_sg_id" {
+  description = "Security group ID for ECS tasks"
+  value       = aws_security_group.ecs.id
+}
+
+# Consumed by the RDS module to restrict database access
+output "rds_sg_id" {
+  description = "Security group ID for RDS"
+  value       = aws_security_group.rds.id
+}
