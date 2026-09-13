@@ -21,3 +21,24 @@ output "alb_sg_id" {
   description = "ALB security group ID"
   value       = module.sg.alb_sg_id
 }
+# URL to reach the platform once deployed
+output "alb_dns_name" {
+  description = "ALB DNS name"
+  value       = module.alb.alb_dns_name
+}
+
+# Needed by CI/CD to push images and trigger deployments
+output "ecr_repository_url" {
+  description = "ECR repository URL"
+  value       = module.ecs.ecr_repository_url
+}
+
+output "ecs_cluster_name" {
+  description = "ECS cluster name"
+  value       = module.ecs.ecs_cluster_name
+}
+
+output "ecs_service_name" {
+  description = "ECS service name"
+  value       = module.ecs.ecs_service_name
+}

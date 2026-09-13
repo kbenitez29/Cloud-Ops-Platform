@@ -11,3 +11,16 @@ variable "environment" {
   type        = string
   default     = "staging"
 }
+
+# Passed via tfvars or CI/CD secrets — never committed to git
+variable "db_password" {
+  description = "RDS master password"
+  type        = string
+  sensitive   = true
+}
+
+variable "project" {
+  description = "Project name"
+  type        = string
+  default     = "cloud-ops"
+}

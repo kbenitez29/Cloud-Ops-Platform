@@ -43,3 +43,47 @@ module "sg" {
   environment = var.environment
   vpc_id      = module.vpc.vpc_id # pulls the VPC ID from the VPC module output
 }
+
+# ALB — public entry point, deployed across public subnets
+module "alb" {
+  source = "../../modules/alb"
+
+  project           = "cloud-ops"
+  environment       = var.environment
+  vpc_id            = module.vpc.vpc_id
+  public_subnet_ids = module.vpc.public_subnet_ids
+  alb_sg_id         = module.sg.alb_sg_id
+  health_check_path = "/health"
+  container_port    = 3000
+}
+
+# ECS — runs containerized tasks in private subnets, registers with ALB target group
+module "ecs" {
+  source = "../../modules/ecs"
+
+  project            = "cloud-ops"
+  environment        = var.environment
+  private_subnet_ids = module.vpc.private_subnet_ids
+  ecs_sg_id          = module.sg.ecs_sg_id
+  target_group_arn   = module.alb.target_group_arn # wires ECS to the ALB
+  container_port     = 3000
+  cpu                = 256
+  memory             = 512
+  desired_count      = 2
+
+  # Database connection wired from RDS and Secrets Manager outputs
+  db_endpoint   = module.rds.db_endpoint
+  db_name       = module.rds.db_name
+  db_secret_arn = aws_secretsmanager_secret.db_password.arn
+}
+
+# RDS — private Postgres instance, only reachable from ECS via security group
+module "rds" {
+  source = "../../modules/rds"
+
+  project            = var.project
+  environment        = var.environment
+  private_subnet_ids = module.vpc.private_subnet_ids
+  rds_sg_id          = module.sg.rds_sg_id
+  db_password        = var.db_password # pulled from Secrets Manager at runtime by ECS
+}
