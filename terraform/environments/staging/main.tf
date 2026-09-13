@@ -34,3 +34,12 @@ module "vpc" {
   public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
 }
+
+# Security groups — defines traffic rules between ALB, ECS, and RDS
+module "sg" {
+  source = "../../modules/sg"
+
+  project     = "cloud-ops"
+  environment = var.environment
+  vpc_id      = module.vpc.vpc_id # pulls the VPC ID from the VPC module output
+}

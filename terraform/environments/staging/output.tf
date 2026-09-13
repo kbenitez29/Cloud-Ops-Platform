@@ -15,3 +15,9 @@ output "private_subnet_ids" {
   description = "List of private subnet IDs"
   value       = module.vpc.private_subnet_ids
 }
+
+# Exposed for visibility and consumed by future modules
+output "alb_sg_id" {
+  description = "ALB security group ID"
+  value       = module.sg.alb_sg_id
+}
