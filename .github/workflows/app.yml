@@ -5,7 +5,7 @@ name: Deploy App
   push:
     branches: [main]
     paths:
-      - 'app/**'   # only runs when app code changes, not when terraform changes
+      - 'app/**'   # only runs when app code changes, not when terraform changes.
 
 env:
   AWS_REGION: eu-west-1
