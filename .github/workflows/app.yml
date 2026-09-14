@@ -51,5 +51,5 @@ jobs:
           aws ecs update-service \
             --cluster ${{ env.ECS_CLUSTER }} \
             --service ${{ env.ECS_SERVICE }} \
-            --force-new-deployment
+            --force-new-deployment \
             --region ${{ env.AWS_REGION }}
