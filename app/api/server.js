@@ -6,7 +6,7 @@ const ENVIRONMENT = process.env.ENVIRONMENT || 'unknown'
 
 const server = http.createServer((req, res) => {
 
-  // ALB hits this every 30s — must return 200 or tasks get marked unhealthy
+  // ALB hits this every 30s — must return 200 or tasks get marked unhealthy.
   if (req.url === '/health' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({
