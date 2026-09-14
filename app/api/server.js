@@ -1,4 +1,4 @@
-// Minimal HTTP server — placeholder until real platform API is built
+// Minimal HTTP server — placeholder until real platform API is built.
 const http = require('http')
 
 const PORT = process.env.PORT || 3000
