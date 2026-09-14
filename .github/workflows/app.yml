@@ -1,7 +1,7 @@
 # Builds Docker image, pushes to ECR, deploys to ECS on every push to main that touches app code
 name: Deploy App
 
-on:
+"on":
   push:
     branches: [main]
     paths:
