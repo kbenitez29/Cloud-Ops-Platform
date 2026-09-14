@@ -49,3 +49,22 @@ variable "desired_count" {
   type        = number
   default     = 2
 }
+
+# Database connection details injected into the container at runtime
+variable "db_endpoint" {
+  description = "RDS endpoint for the database connection"
+  type        = string
+  default     = ""
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+  default     = "cloudops"
+}
+
+variable "db_secret_arn" {
+  description = "ARN of the Secrets Manager secret containing the DB password"
+  type        = string
+  default     = ""
+}

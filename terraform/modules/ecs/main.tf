@@ -118,9 +118,17 @@ resource "aws_ecs_task_definition" "main" {
         "awslogs-stream-prefix" = "ecs"
       }
     }
+    environment = [
+      # Non-sensitive config passed as plain env vars
+      { name = "DB_HOST", value = var.db_endpoint },
+      { name = "DB_NAME", value = var.db_name },
+      { name = "PORT",    value = tostring(var.container_port) }
+    ]
 
-    environment = []
-    secrets     = [] # will be populated from Secrets Manager in later milestones
+    secrets = [
+      # ECS fetches this from Secrets Manager at task startup — never exposed in plaintext
+      { name = "DB_PASSWORD", valueFrom = var.db_secret_arn }
+    ]
   }])
 }
 
@@ -150,4 +158,19 @@ resource "aws_ecs_service" "main" {
   deployment_maximum_percent         = 200
 
   depends_on = [aws_iam_role_policy_attachment.ecs_execution]
+}
+
+# Grants ECS execution role permission to read secrets at container startup
+resource "aws_iam_role_policy" "ecs_secrets" {
+  name = "${var.project}-${var.environment}-ecs-secrets-policy"
+  role = aws_iam_role.ecs_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = var.db_secret_arn != "" ? [var.db_secret_arn] : ["*"]
+    }]
+  })
 }
