@@ -5,9 +5,15 @@ output "alb_dns_name" {
 }
 
 # Passed to the ECS module so tasks register themselves with this target group
-output "target_group_arn" {
-  description = "ARN of the ALB target group"
-  value       = aws_lb_target_group.main.arn
+output "api_target_group_arn" {
+  description = "ARN of the API target group"
+  value       = aws_lb_target_group.api.arn
+}
+
+# Passed to the frontend ECS service
+output "frontend_target_group_arn" {
+  description = "ARN of the frontend target group"
+  value       = aws_lb_target_group.frontend.arn
 }
 
 # Needed for Route53 alias record in milestone 4

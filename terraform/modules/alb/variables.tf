@@ -37,3 +37,10 @@ variable "health_check_path" {
   type        = string
   default     = "/health"
 }
+
+# Frontend container port — Nginx serves on 80
+variable "frontend_container_port" {
+  description = "Port the frontend container listens on"
+  type        = number
+  default     = 80
+}

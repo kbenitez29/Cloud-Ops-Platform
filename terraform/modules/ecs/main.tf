@@ -1,18 +1,19 @@
 # ECR repository — stores Docker images that ECS pulls from
 resource "aws_ecr_repository" "main" {
-  name                 = "${var.project}-${var.environment}"
+  name                 = "${var.project}-${var.environment}-${var.service_name}"
   image_tag_mutability = "MUTABLE"
+  force_delete         = true # allows terraform to delete the repo even if it still contains images
 
   image_scanning_configuration {
     scan_on_push = true # scans for vulnerabilities on every image push
   }
 
   tags = {
-    Name = "${var.project}-${var.environment}-ecr"
+    Name = "${var.project}-${var.environment}-${var.service_name}-ecr"
   }
 }
 
-# Lifecycle policy — keeps only the last 10 images to control storage costs
+# Lifecycle policy — keeps only the last 7 images to control storage costs
 resource "aws_ecr_lifecycle_policy" "main" {
   repository = aws_ecr_repository.main.name
 
@@ -34,7 +35,7 @@ resource "aws_ecr_lifecycle_policy" "main" {
 
 # IAM role that ECS uses to pull images from ECR and write logs to CloudWatch
 resource "aws_iam_role" "ecs_execution" {
-  name = "${var.project}-${var.environment}-ecs-execution-role"
+  name = "${var.project}-${var.environment}-${var.service_name}-ecs-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -54,7 +55,7 @@ resource "aws_iam_role_policy_attachment" "ecs_execution" {
 
 # IAM role assumed by the running container itself to call AWS APIs
 resource "aws_iam_role" "ecs_task" {
-  name = "${var.project}-${var.environment}-ecs-task-role"
+  name = "${var.project}-${var.environment}-${var.service_name}-ecs-task-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -68,31 +69,18 @@ resource "aws_iam_role" "ecs_task" {
 
 # CloudWatch log group — ECS tasks stream logs here
 resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.project}-${var.environment}"
+  name              = "/ecs/${var.project}-${var.environment}-${var.service_name}"
   retention_in_days = 30 # keeps logs for 30 days then auto-deletes to control costs
 
   tags = {
-    Name = "${var.project}-${var.environment}-logs"
+    Name = "${var.project}-${var.environment}-${var.service_name}-logs"
   }
 }
 
-# ECS cluster — logical boundary where all tasks for this environment run
-resource "aws_ecs_cluster" "main" {
-  name = "${var.project}-${var.environment}-cluster"
-
-  setting {
-    name  = "containerInsights"
-    value = "enabled" # enables CloudWatch Container Insights for deeper metrics
-  }
-
-  tags = {
-    Name = "${var.project}-${var.environment}-cluster"
-  }
-}
 
 # Task definition — blueprint describing the container: image, CPU, memory, ports, logs
 resource "aws_ecs_task_definition" "main" {
-  family                   = "${var.project}-${var.environment}"
+  family                   = "${var.project}-${var.environment}-${var.service_name}"
   network_mode             = "awsvpc" # each task gets its own ENI and private IP
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.cpu
@@ -101,7 +89,7 @@ resource "aws_ecs_task_definition" "main" {
   task_role_arn            = aws_iam_role.ecs_task.arn      # used by the container
 
   container_definitions = jsonencode([{
-    name  = "${var.project}-${var.environment}"
+    name  = "${var.project}-${var.environment}-${var.service_name}"
     image = "${aws_ecr_repository.main.repository_url}:latest"
 
     portMappings = [{
@@ -118,6 +106,7 @@ resource "aws_ecs_task_definition" "main" {
         "awslogs-stream-prefix" = "ecs"
       }
     }
+
     environment = [
       # Non-sensitive config passed as plain env vars
       { name = "DB_HOST", value = var.db_endpoint },
@@ -125,17 +114,17 @@ resource "aws_ecs_task_definition" "main" {
       { name = "PORT",    value = tostring(var.container_port) }
     ]
 
-    secrets = [
+    secrets = var.db_secret_arn != "" ? [
       # ECS fetches this from Secrets Manager at task startup — never exposed in plaintext
       { name = "DB_PASSWORD", valueFrom = var.db_secret_arn }
-    ]
+    ] : []
   }])
 }
 
 # ECS service — maintains desired_count running tasks, restarts them if they die
 resource "aws_ecs_service" "main" {
-  name            = "${var.project}-${var.environment}-service"
-  cluster         = aws_ecs_cluster.main.id
+  name            = "${var.project}-${var.environment}-${var.service_name}-service"
+  cluster         = var.cluster_id
   task_definition = aws_ecs_task_definition.main.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
@@ -149,7 +138,7 @@ resource "aws_ecs_service" "main" {
   # Registers running tasks with the ALB target group so traffic can reach them
   load_balancer {
     target_group_arn = var.target_group_arn
-    container_name   = "${var.project}-${var.environment}"
+    container_name   = "${var.project}-${var.environment}-${var.service_name}"
     container_port   = var.container_port
   }
 
@@ -162,7 +151,7 @@ resource "aws_ecs_service" "main" {
 
 # Grants ECS execution role permission to read secrets at container startup
 resource "aws_iam_role_policy" "ecs_secrets" {
-  name = "${var.project}-${var.environment}-ecs-secrets-policy"
+  name = "${var.project}-${var.environment}-${var.service_name}-ecs-secrets-policy"
   role = aws_iam_role.ecs_execution.id
 
   policy = jsonencode({

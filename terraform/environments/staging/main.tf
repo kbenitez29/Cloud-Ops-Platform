@@ -57,24 +57,54 @@ module "alb" {
   container_port    = 3000
 }
 
-# ECS — runs containerized tasks in private subnets, registers with ALB target group
-module "ecs" {
+# Shared ECS cluster — both API and frontend services run inside this
+module "ecs_cluster" {
+  source = "../../modules/ecs-cluster"
+
+  project     = var.project
+  environment = var.environment
+}
+
+# API ECS service — Node.js backend, handles /api/* routes
+module "ecs_api" {
   source = "../../modules/ecs"
 
-  project            = "cloud-ops"
+  project            = var.project
   environment        = var.environment
+  cluster_id         = module.ecs_cluster.cluster_id
   private_subnet_ids = module.vpc.private_subnet_ids
   ecs_sg_id          = module.sg.ecs_sg_id
-  target_group_arn   = module.alb.target_group_arn # wires ECS to the ALB
+  target_group_arn   = module.alb.api_target_group_arn
   container_port     = 3000
   cpu                = 256
   memory             = 512
   desired_count      = 2
+  db_endpoint        = module.rds.db_endpoint
+  db_name            = module.rds.db_name
+  db_secret_arn      = aws_secretsmanager_secret.db_password.arn
 
-  # Database connection wired from RDS and Secrets Manager outputs
-  db_endpoint   = module.rds.db_endpoint
-  db_name       = module.rds.db_name
-  db_secret_arn = aws_secretsmanager_secret.db_password.arn
+  # Unique name suffix so API and frontend resources don't conflict
+  service_name       = "api"
+}
+
+# Frontend ECS service — React app served by Nginx
+module "ecs_frontend" {
+  source = "../../modules/ecs"
+
+  project            = var.project
+  environment        = var.environment
+  cluster_id         = module.ecs_cluster.cluster_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  ecs_sg_id          = module.sg.ecs_sg_id
+  target_group_arn   = module.alb.frontend_target_group_arn
+  container_port     = 80
+  cpu                = 256
+  memory             = 512
+  desired_count      = 2
+  db_endpoint        = ""
+  db_name            = ""
+  db_secret_arn      = ""
+  service_name       = "frontend"
 }
 
 # RDS — private Postgres instance, only reachable from ECS via security group

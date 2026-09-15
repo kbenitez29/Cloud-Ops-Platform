@@ -68,3 +68,16 @@ variable "db_secret_arn" {
   type        = string
   default     = ""
 }
+
+# Differentiates resources when module is called multiple times (api, frontend)
+variable "service_name" {
+  description = "Service name suffix — used to uniquely name resources per service"
+  type        = string
+  default     = "api"
+}
+
+# Cluster ID passed from the shared ecs-cluster module
+variable "cluster_id" {
+  description = "ID of the shared ECS cluster"
+  type        = string
+}

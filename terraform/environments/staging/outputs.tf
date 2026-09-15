@@ -27,18 +27,27 @@ output "alb_dns_name" {
   value       = module.alb.alb_dns_name
 }
 
-# Needed by CI/CD to push images and trigger deployments
-output "ecr_repository_url" {
-  description = "ECR repository URL"
-  value       = module.ecs.ecr_repository_url
+output "api_ecr_repository_url" {
+  description = "ECR repository URL for the API"
+  value       = module.ecs_api.ecr_repository_url
+}
+
+output "frontend_ecr_repository_url" {
+  description = "ECR repository URL for the frontend"
+  value       = module.ecs_frontend.ecr_repository_url
 }
 
 output "ecs_cluster_name" {
   description = "ECS cluster name"
-  value       = module.ecs.ecs_cluster_name
+  value       = module.ecs_cluster.cluster_name
 }
 
-output "ecs_service_name" {
-  description = "ECS service name"
-  value       = module.ecs.ecs_service_name
+output "api_service_name" {
+  description = "API ECS service name"
+  value       = module.ecs_api.ecs_service_name
+}
+
+output "frontend_service_name" {
+  description = "Frontend ECS service name"
+  value       = module.ecs_frontend.ecs_service_name
 }
