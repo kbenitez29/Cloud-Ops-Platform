@@ -1,0 +1,8 @@
+{
+    "name": "cloud-ops-api",
+    "version": "0.2.0",
+    "main": "server.js",
+    "dependencies": {
+      "@aws-sdk/client-ecs": "^3.600.0"
+    }
+  }

@@ -81,3 +81,21 @@ variable "cluster_id" {
   description = "ID of the shared ECS cluster"
   type        = string
 }
+
+variable "ecs_cluster_name" {
+  description = "Name of the ECS cluster (for SDK calls from the API)"
+  type        = string
+  default     = ""
+}
+
+variable "api_service_name" {
+  description = "Name of the API ECS service (for SDK calls)"
+  type        = string
+  default     = ""
+}
+
+variable "frontend_service_name" {
+  description = "Name of the frontend ECS service (for SDK calls)"
+  type        = string
+  default     = ""
+}

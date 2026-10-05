@@ -3,7 +3,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# No package.json needed — we only use Node's built-in http module
+COPY package.json .
+RUN npm install --omit=dev
 COPY server.js .
 
 EXPOSE 3000

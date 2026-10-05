@@ -111,7 +111,10 @@ resource "aws_ecs_task_definition" "main" {
       # Non-sensitive config passed as plain env vars
       { name = "DB_HOST", value = var.db_endpoint },
       { name = "DB_NAME", value = var.db_name },
-      { name = "PORT",    value = tostring(var.container_port) }
+      { name = "PORT",    value = tostring(var.container_port) },
+      { name = "ECS_CLUSTER",          value = var.ecs_cluster_name },
+      { name = "ECS_API_SERVICE",      value = var.api_service_name },
+      { name = "ECS_FRONTEND_SERVICE", value = var.frontend_service_name }
     ]
 
     secrets = var.db_secret_arn != "" ? [
@@ -160,6 +163,22 @@ resource "aws_iam_role_policy" "ecs_secrets" {
       Effect   = "Allow"
       Action   = ["secretsmanager:GetSecretValue"]
       Resource = var.db_secret_arn != "" ? [var.db_secret_arn] : ["*"]
+    }]
+  })
+}
+
+# Grants the running container permission to query ECS service status (API only)
+resource "aws_iam_role_policy" "ecs_readonly" {
+  count = var.service_name == "api" ? 1 : 0
+  name  = "${var.project}-${var.environment}-${var.service_name}-ecs-readonly"
+  role  = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["ecs:DescribeServices", "ecs:ListServices"]
+      Resource = "*"
     }]
   })
 }
