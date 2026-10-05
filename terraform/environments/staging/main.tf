@@ -69,6 +69,10 @@ module "ecs_cluster" {
 module "ecs_api" {
   source = "../../modules/ecs"
 
+  ecs_cluster_name       = module.ecs_cluster.cluster_name
+  api_service_name       = "cloud-ops-staging-api-service"
+  frontend_service_name  = "cloud-ops-staging-frontend-service"
+
   project            = var.project
   environment        = var.environment
   cluster_id         = module.ecs_cluster.cluster_id
@@ -90,6 +94,10 @@ module "ecs_api" {
 # Frontend ECS service — React app served by Nginx
 module "ecs_frontend" {
   source = "../../modules/ecs"
+
+  ecs_cluster_name       = module.ecs_cluster.cluster_name
+  api_service_name       = "cloud-ops-staging-api-service"
+  frontend_service_name  = "cloud-ops-staging-frontend-service"
 
   project            = var.project
   environment        = var.environment
