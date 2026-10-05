@@ -9,9 +9,9 @@ name: Deploy App
 
 env:
   AWS_REGION: eu-west-1
-  ECR_REPOSITORY: cloud-ops-staging
+  ECR_REPOSITORY: cloud-ops-staging-api
   ECS_CLUSTER: cloud-ops-staging-cluster
-  ECS_SERVICE: cloud-ops-staging-service
+  ECS_SERVICE: cloud-ops-staging-api-service
 
 jobs:
   deploy:
