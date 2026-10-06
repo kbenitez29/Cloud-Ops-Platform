@@ -125,3 +125,27 @@ module "rds" {
   rds_sg_id          = module.sg.rds_sg_id
   db_password        = var.db_password # pulled from Secrets Manager at runtime by ECS
 }
+
+# CloudWatch alarms + SNS email alerting for key infrastructure metrics
+module "alerting" {
+  source = "../../modules/alerting"
+
+  project     = var.project
+  environment = var.environment
+  alert_email = var.alert_email
+
+  ecs_cluster_name       = module.ecs_cluster.cluster_name
+  api_service_name       = "cloud-ops-staging-api-service"
+  frontend_service_name  = "cloud-ops-staging-frontend-service"
+  alb_arn_suffix         = module.alb.alb_arn_suffix
+  db_instance_id         = module.rds.db_instance_id
+}
+
+# Free TLS certificate for the platform's public domain
+module "acm" {
+  source = "../../modules/acm"
+
+  domain_name = var.domain_name
+  project     = var.project
+  environment = var.environment
+}

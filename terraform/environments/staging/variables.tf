@@ -24,3 +24,13 @@ variable "project" {
   type        = string
   default     = "cloud-ops"
 }
+
+variable "alert_email" {
+  description = "Email address to receive infrastructure alerts"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Public domain name for the platform"
+  type        = string
+}
