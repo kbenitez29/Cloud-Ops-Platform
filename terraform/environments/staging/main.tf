@@ -48,13 +48,14 @@ module "sg" {
 module "alb" {
   source = "../../modules/alb"
 
-  project           = "cloud-ops"
+  project            = var.project
   environment       = var.environment
   vpc_id            = module.vpc.vpc_id
   public_subnet_ids = module.vpc.public_subnet_ids
   alb_sg_id         = module.sg.alb_sg_id
   health_check_path = "/health"
   container_port    = 3000
+  certificate_arn    = module.acm.certificate_arn
 }
 
 # Shared ECS cluster — both API and frontend services run inside this
@@ -141,11 +142,20 @@ module "alerting" {
   db_instance_id         = module.rds.db_instance_id
 }
 
-# Free TLS certificate for the platform's public domain
+# Self-signed certificate imported into ACM — see module comment for why
 module "acm" {
   source = "../../modules/acm"
 
-  domain_name = var.domain_name
+  project                = var.project
+  environment             = var.environment
+  private_key_path        = "${path.root}/../../../certs/key.pem"
+  certificate_body_path   = "${path.root}/../../../certs/cert.pem"
+}
+
+# Security layer — CloudTrail audit logging + GuardDuty threat detection
+module "security" {
+  source = "../../modules/security"
+
   project     = var.project
   environment = var.environment
 }

@@ -51,15 +51,3 @@ output "frontend_service_name" {
   description = "Frontend ECS service name"
   value       = module.ecs_frontend.ecs_service_name
 }
-
-output "cert_validation_name" {
-  value = module.acm.validation_record_name
-}
-
-output "cert_validation_value" {
-  value = module.acm.validation_record_value
-}
-
-output "cert_validation_type" {
-  value = module.acm.validation_record_type
-}
